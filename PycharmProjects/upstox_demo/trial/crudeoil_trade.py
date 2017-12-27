@@ -3,46 +3,72 @@ from datetime import datetime
 from threading import Timer
 import math
 
-#Api key , access token
-u = Upstox ('JMJueJYcG05yrycTa4tBX3zP5KGqOl2c8dAZ31Ay', '6f8a3953ec1da31059c9292d20a38e0f538ff725')
+# Api key , access token
+u = Upstox('JMJueJYcG05yrycTa4tBX3zP5KGqOl2c8dAZ31Ay', '6f8a3953ec1da31059c9292d20a38e0f538ff725')
 
-u.get_master_contract('MCX_FO') # get contracts for MCX FO
+u.get_master_contract('MCX_FO')  # get contracts for MCX FO
 
-
-crude_oil_instrument = u.get_instrument_by_symbol('MCX_FO', 'crudeoilm17decfut')
-# r= u.get_live_feed(crue_oil_instrument, LiveFeedType.LTP)
-
-# def event_handler_quote_update(message):
-#     print "Last Trade price: %s" % str(message['ltp'])
-#     print("Quote Update: %s" % str(message))
-
-today=datetime.today()
-
-fetch_open_time=today.replace(day=today.day + 1, hour=10, minute=0, second=10, microsecond=0)
-calculate_prices_time=today.replace(day=today.day + 1, hour=10, minute=0, second=20, microsecond=0)
-buy_order_time=today.replace(day=today.day + 1, hour=10, minute=0, second=30, microsecond=0)
+buy_above = 0
+buy_target = 0
+sl_for_buy = 0
+sell_below = 0
+sell_target = 0
+sl_for_sell = 0
+crudeoil_open = 0;
 
 previous_day_crude_open = 0
 previous_day_crude_high = 0
 previous_day_crude_low = 0
 previous_day_crude_close = 0
 
-delta_t= fetch_open_time - today
-delta_t_calculation = calculate_prices_time - today
-delta_t_order_place = buy_order_time - today
-time_for_open_prices= delta_t.seconds + 1
-time_for_calculation = delta_t_calculation.seconds + 1
-time_for_order = delta_t_order_place.seconds+1
+
+def order_buy_and_sell_crudeoilVWAP(apiKey, accessToken):
+    crude_oil_instrument = u.get_instrument_by_symbol('MCX_FO', 'crudeoilm17decfut')
+    # r= u.get_live_feed(crue_oil_instrument, LiveFeedType.LTP)
+
+    # def event_handler_quote_update(message):
+    #     print "Last Trade price: %s" % str(message['ltp'])
+    #     print("Quote Update: %s" % str(message))
+
+    today = datetime.today()
+
+    fetch_open_time = today.replace(day=today.day + 1, hour=10, minute=0, second=10, microsecond=0)
+    calculate__time = today.replace(day=today.day + 1, hour=10, minute=0, second=20, microsecond=0)
+    buy_order__time = today.replace(day=today.day + 1, hour=10, minute=0, second=30, microsecond=0)
+
+    delta_t = fetch_open_time - today
+    delta_t_calculation = calculate__time - today
+    delta_t_order_place = buy_order__time - today
+    time_for_open_prices = delta_t.seconds + 1
+    time_for_calculation = delta_t_calculation.seconds + 1
+    time_for_order = delta_t_order_place.seconds + 1
+
+    target_set_timer = Timer(time_for_calculation, calculate_target_and_sl)
+    target_set_timer.start()
+
+    ############# place buy and buy target ####################
+
+    place_buy_order_set_timer = Timer(time_for_order, place_crude_buy_order)
+    place_buy_order_set_timer.start()
+
+    ###################### subscribe to order trigger event ##################
+    # u.set_on_order_update (order_triggered_event_handler)
+    u.set_on_trade_update(order_triggered_event_handler)
+
+    ###################### subscribe to price change event ##################
+
+    # u.set_on_quote_update(event_handler_quote_update)
+    # u.unsubscribe(crude_oil_instrument, LiveFeedType.LTP)
+    # u.subscribe(crude_oil_instrument, LiveFeedType.LTP)
+
+    ############# place sell and sell target ####################
+    place_sell_order_set_timer = Timer(time_for_order, place_crude_sell_order)
+    place_sell_order_set_timer.start()
 
 
-buy_above=0
-buy_target=0
-sl_for_buy=0
-sell_below=0
-sell_target=0
-sl_for_sell=0
+    # Start the websocket here
+    u.start_websocket(False)
 
-crudeoil_open=0;
 
 def fetch_open_prices():
     crudeoil_future_full = u.get_live_feed(crude_oil_instrument, LiveFeedType.Full)
@@ -68,7 +94,7 @@ def calculate_target_and_sl():
     sell_below = math.ceil(sell_below)
     global sell_target
     sell_target = crudeoil_open - 0.382 * first_sd
-    sell_target=math.ceil(sell_target)
+    sell_target = math.ceil(sell_target)
     global sl_for_sell
     sl_for_sell = crudeoil_open + 1
     sl_for_sell = math.ceil(sl_for_sell)
@@ -79,47 +105,51 @@ def calculate_target_and_sl():
     print sell_target
     print sl_for_sell
 
+
 fetch_open_prices()
 calculate_target_and_sl()
+
 
 def place_crude_buy_order():
     print "####################### Buy order ###################"
     print (u.place_order(TransactionType.Buy,  # transaction_type
-                  crude_oil_instrument,  # instrument
-                  1,  # quantity
-                  OrderType.StopLossMarket,  # order_type
-                  ProductType.Intraday,  # product_type
-                  0.0,  # price
-                  float(buy_above),  # trigger_price
-                  0,  # disclosed_quantity
-                  DurationType.DAY,  # duration
-                  0.0,  # stop_loss
-                  0.0,  # square_off
-                  None)  # trailing_ticks
+                         crude_oil_instrument,  # instrument
+                         1,  # quantity
+                         OrderType.StopLossMarket,  # order_type
+                         ProductType.Intraday,  # product_type
+                         0.0,  # price
+                         float(buy_above),  # trigger_price
+                         0,  # disclosed_quantity
+                         DurationType.DAY,  # duration
+                         0.0,  # stop_loss
+                         0.0,  # square_off
+                         None)  # trailing_ticks
            )
+
 
 def place_crude_buy_target_order():
     print "####################### Buy target order ###################"
-    print (u.place_order(TransactionType.Buy,  # transaction_type
-                  crude_oil_instrument,  # instrument
-                  1,  # quantity
-                  OrderType.StopLossMarket,  # order_type
-                  ProductType.Intraday,  # product_type
-                  0.0,  # price
-                  float(buy_target),  # trigger_price
-                  0,  # disclosed_quantity
-                  DurationType.DAY,  # duration
-                  0.0,  # stop_loss
-                  0.0,  # square_off
-                  None)  # trailing_ticks
+    print (u.place_order(TransactionType.Sell,  # transaction_type
+                         crude_oil_instrument,  # instrument
+                         1,  # quantity
+                         OrderType.Limit,  # order_type
+                         ProductType.Intraday,  # product_type
+                         float(buy_target),  # price
+                         0.0,  # trigger_price
+                         0,  # disclosed_quantity
+                         DurationType.DAY,  # duration
+                         0.0,  # stop_loss
+                         0.0,  # square_off
+                         None)  # trailing_ticks
            )
+
 
 def stop_loss_order_for_buy():
     print "####################### stop loss for buy ###################"
     print (u.place_order(TransactionType.Sell,  # transaction_type
                          crude_oil_instrument,  # instrument
                          1,  # quantity
-                         OrderType.StopLossMarket,  # order_type
+                         OrderType.Limit,  # order_type
                          ProductType.Intraday,  # product_type
                          0.0,  # price
                          float(sl_for_buy),  # trigger_price
@@ -129,6 +159,7 @@ def stop_loss_order_for_buy():
                          None,  # square_off
                          None)  # trailing_ticks
            )
+
 
 def place_crude_sell_order():
     print "####################### Sell order ###################"
@@ -145,6 +176,7 @@ def place_crude_sell_order():
                   None,  # square_off
                   None)  # trailing_ticks
 
+
 def place_crude_sell_target_order():
     print "####################### Sell target order ###################"
     u.place_order(TransactionType.Buy,  # transaction_type
@@ -159,6 +191,7 @@ def place_crude_sell_target_order():
                   None,  # stop_loss
                   None,  # square_off
                   None)  # trailing_ticks
+
 
 def stop_loss_order_for_sell():
     print "####################### stop loss for sell ###################"
@@ -176,7 +209,8 @@ def stop_loss_order_for_sell():
                          None)  # trailing_ticks
            )
 
-def buy_order_triggered_event_handler (event):
+
+def order_triggered_event_handler(event):
     print ("Event: %s" % str(event))
     stop_loss_order_for_buy()
     # if (event['aa'] == 'aa'):
