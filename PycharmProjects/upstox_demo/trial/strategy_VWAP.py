@@ -18,62 +18,35 @@ india_vix_nse_index = 0
 nifty_nse_future = 0
 
 
-def order_buy_and_sell_niftyVWAP(apiKey, accessToken, symbol_string):
+def order_buy_and_sell_niftyVWAP(upstox, symbol_string,minute):
     global u
-    u = Upstox(apiKey, accessToken)
-
-    u.get_master_contract('NSE_FO')  # get contracts for NSE FO
-    u.get_master_contract('NSE_INDEX')  # get contracts for NSE_INDEX
+    u=upstox
     global india_vix_nse_index
-    india_vix_nse_index = u.get_instrument_by_symbol('NSE_INDEX', 'INDIA_VIX')
+    india_vix_nse_index = upstox.get_instrument_by_symbol('NSE_INDEX', 'INDIA_VIX')
     global nifty_nse_future
-    nifty_nse_future = u.get_instrument_by_symbol('NSE_FO', symbol_string)
-    print nifty_nse_future
+    nifty_nse_future = upstox.get_instrument_by_symbol('NSE_FO', symbol_string)
+    # print nifty_nse_future
 
     today = datetime.today()
 
-    fetch_open_time = today.replace(day=today.day + 1, hour=9, minute=15, second=0, microsecond=500)
-    # calc_price_time = today.replace(day=today.day + 1, hour=9, minute=15, second=5, microsecond=0)
-    # buy_order_time_ = today.replace(day=today.day + 1, hour=9, minute=15, second=6, microsecond=0)
-    # sell_order_time = today.replace(day=today.day + 1, hour=9, minute=15, second=9, microsecond=0)
+    print 'before trigerring order'
+    fetch_open_time = today.replace(day=today.day + 1, hour=9, minute=minute, second=0, microsecond=500)
 
     delta_t = fetch_open_time - today
-    # delta_t_calculation = calc_price_time - today
-    # delta_t_order_place = buy_order_time_ - today
-    # delta_t_sell_place = sell_order_time - today
     time_for_open_prices = delta_t.seconds + 1
-    # time_for_calculation = delta_t_calculation.seconds + 1
-    # time_for_buy = delta_t_order_place.seconds + 1
-    # time_for_sell = delta_t_sell_place.seconds + 1
     open_price_timer = Timer(time_for_open_prices, fetch_open_prices)
     open_price_timer.start()
 
-    # target_set_timer = Timer(time_for_calculation, calculate_target_and_sl)
-    # target_set_timer.start()
 
     ###################### subscribe to order trigger event ##################
-    u.set_on_trade_update(buy_order_triggered_event_handler)
+    upstox.set_on_trade_update(buy_order_triggered_event_handler)
 
     ###################### subscribe to price change event ##################
 
     # u.set_on_quote_update(event_handler_quote_update)
-    u.unsubscribe(nifty_nse_future, LiveFeedType.LTP)
-    u.subscribe(nifty_nse_future, LiveFeedType.LTP)
-
-
-    ############# place buy and buy target ####################
-
-    # place_buy_order_set_timer = Timer(time_for_buy, nifty_oco_buy_order)
-    # place_buy_order_set_timer.start()
-
-
-
-    ############# place sell and sell target ####################
-    # place_sell_order_set_timer = Timer(time_for_sell, nifty_oco_sell_order)
-    # place_sell_order_set_timer.start()
-
-    #Start the websocket here
-    u.start_websocket(False)
+    upstox.unsubscribe(nifty_nse_future, LiveFeedType.LTP)
+    upstox.subscribe(nifty_nse_future, LiveFeedType.LTP)
+    upstox.start_websocket(False)
 
 def fetch_open_prices():
     india_vix = u.get_live_feed(india_vix_nse_index, LiveFeedType.Full)
@@ -131,7 +104,7 @@ def nifty_oco_buy_order():
     print "####################### Buy order OCO and limit ###################"
     print (u.place_order(TransactionType.Buy,  # transaction_type
                          nifty_nse_future,  # instrument
-                         nifty_nse_future['lot_size'],  # quantity
+                         int(nifty_nse_future[9]),  # quantity
                          OrderType.StopLossLimit,  # order_type
                          ProductType.OneCancelsOther,  # product_type
                          float(buy_above+1),  # price
@@ -148,7 +121,7 @@ def nifty_oco_sell_order():
     print "####################### Sell order OCO and limit ###################"
     print (u.place_order(TransactionType.Sell,  # transaction_type
                          nifty_nse_future,  # instrument
-                         nifty_nse_future['lot_size'],  # quantity
+                         int(nifty_nse_future[9]),  # quantity
                          OrderType.StopLossLimit,  # order_type
                          ProductType.OneCancelsOther,  # product_type
                          float(sell_below-1),  # price
@@ -175,5 +148,13 @@ def buy_order_triggered_event_handler(event):
 def event_handler_quote_update(message):
     print "Last Trade price" + str(message['ltp']) + " time " + str(datetime.now().time())
 
-# order_buy_and_sell_niftyVWAP('7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu','51fc5fe83c9282296b1d592be0678fd25ca4d6b8')
-order_buy_and_sell_niftyVWAP('7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu','9df872c1fac4b5962f421930a7458c46cd51a65a','banknifty17decfut')
+
+def start_from_here():
+    p = Upstox('7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu', 'e385970e9f67fb6e2f0785386c91428894b42c37')
+    p.get_master_contract('NSE_FO')  # get contracts for NSE FO
+    p.get_master_contract('NSE_INDEX')  # get contracts for NSE_INDEX
+    # order_buy_and_sell_niftyVWAP(p, 'banknifty18janfut', 19)
+    order_buy_and_sell_niftyVWAP(p, 'nifty18janfut', 45)
+
+
+# start_from_here()

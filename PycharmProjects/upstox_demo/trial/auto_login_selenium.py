@@ -17,7 +17,7 @@ def login_to_upstox(url):
 
     passwordField = driver.find_element_by_id("password")
     passwordField.clear()
-    passwordField.send_keys("aug@12")
+    passwordField.send_keys("feb@12")
 
     time.sleep(0.2)
 

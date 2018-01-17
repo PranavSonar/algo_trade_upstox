@@ -1,13 +1,12 @@
-from datetime import datetime
-
-
 # print "Last Trade price" +str(333) +" time "+ str(datetime.now().time())
 #
 # # print str(datetime.now().time())
 import math
+from datetime import datetime
 
-nifty_open=10201
-india_vix_open=14
+nifty_open = 10201
+india_vix_open = 14
+
 
 def calculate_target_and_sl():
     first_sd = nifty_open * india_vix_open * 0.00104684784518
@@ -30,16 +29,21 @@ def calculate_target_and_sl():
     sl_for_sell = nifty_open + 1
     sl_for_sell = math.ceil(sl_for_sell)
     print 'buy above: %s' % str(buy_above)
-    print 'buy_target: %s'% str(buy_target)
-    print 'sl_for_buy: %s' %str(sl_for_buy)
-    print 'sell_below: %s' %str(sell_below)
-    print 'sell_target: %s' %str(sell_target)
-    print 'sl_for_sell: %s' %str(sl_for_sell)
+    print 'buy_target: %s' % str(buy_target)
+    print 'sl_for_buy: %s' % str(sl_for_buy)
+    print 'sell_below: %s' % str(sell_below)
+    print 'sell_target: %s' % str(sell_target)
+    print 'sl_for_sell: %s' % str(sl_for_sell)
 
 
 # calculate_target_and_sl()
 def current_day():
     print datetime.today().weekday()
-    print datetime.day(2017,12,2017).weekday()
+    print datetime.day(2017, 12, 2017).weekday()
 
-current_day()
+    # current_day()
+
+# print datetime.fromtimestamp(
+#     1514454300000/1000
+# ).strftime('%d/%m/%Y')
+print datetime.fromtimestamp(1514454300).date()

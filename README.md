@@ -25,8 +25,8 @@ curl \
 // below is saved in postman
 // get basic user information
 curl \
--H 'authorization: Bearer 696bb6510428e9120ed338ba1b1a159c611a579c' \
--H 'x-api-key:vsmym5Dcv13SJVZT0yhqA5lfXDHakUJt3ShWj5bd ' \
+-H 'authorization: Bearer f5e8644720e2060eb062ae7f803ae80f2c5092c0' \
+-H 'x-api-key:7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu ' \
 -X GET 'https://api.upstox.com/index/profile'
 
 
