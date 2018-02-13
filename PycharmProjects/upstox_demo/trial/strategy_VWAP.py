@@ -30,7 +30,8 @@ def order_buy_and_sell_niftyVWAP(upstox, symbol_string,minute):
     today = datetime.today()
 
     print 'before trigerring order'
-    fetch_open_time = today.replace(day=today.day + 1, hour=9, minute=minute, second=0, microsecond=500)
+    # fetch_open_time = today.replace(day=1, hour=9, minute=minute, second=0, microsecond=500)
+    fetch_open_time = today.replace(day=today.day + 1, hour=4, minute=minute, second=0, microsecond=500)
 
     delta_t = fetch_open_time - today
     time_for_open_prices = delta_t.seconds + 1
@@ -104,14 +105,14 @@ def nifty_oco_buy_order():
     print "####################### Buy order OCO and limit ###################"
     print (u.place_order(TransactionType.Buy,  # transaction_type
                          nifty_nse_future,  # instrument
-                         int(nifty_nse_future[9]),  # quantity
+                         2*int(nifty_nse_future[9]),  # quantity
                          OrderType.StopLossLimit,  # order_type
                          ProductType.OneCancelsOther,  # product_type
                          float(buy_above+1),  # price
                          float(buy_above),  # trigger_price
                          0,  # disclosed_quantity
                          DurationType.DAY,  # duration
-                         float(buy_above-sl_for_buy),  # stop_loss
+                         float(buy_above-sl_for_buy+10),  # stop_loss
                          float(buy_target-buy_above),  # square_off
                          None)  # trailing_ticks
            )
@@ -121,14 +122,14 @@ def nifty_oco_sell_order():
     print "####################### Sell order OCO and limit ###################"
     print (u.place_order(TransactionType.Sell,  # transaction_type
                          nifty_nse_future,  # instrument
-                         int(nifty_nse_future[9]),  # quantity
+                         2*int(nifty_nse_future[9]),  # quantity
                          OrderType.StopLossLimit,  # order_type
                          ProductType.OneCancelsOther,  # product_type
                          float(sell_below-1),  # price
                          float(sell_below),  # trigger_price
                          0,  # disclosed_quantity
                          DurationType.DAY,  # duration
-                         float(sl_for_sell-sell_below),  # stop_loss
+                         float(sl_for_sell-sell_below-10),  # stop_loss
                          float(sell_below-sell_target),  # square_off
                          None)  # trailing_ticks
            )
@@ -150,11 +151,11 @@ def event_handler_quote_update(message):
 
 
 def start_from_here():
-    p = Upstox('7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu', 'e385970e9f67fb6e2f0785386c91428894b42c37')
+    p = Upstox('7QQDdOIHNxatXDiRIHbyv2sG3J8QOozU7o8UYKmu', '378c51ae1b50ca9267736850102179d1a78ced04')
     p.get_master_contract('NSE_FO')  # get contracts for NSE FO
     p.get_master_contract('NSE_INDEX')  # get contracts for NSE_INDEX
     # order_buy_and_sell_niftyVWAP(p, 'banknifty18janfut', 19)
-    order_buy_and_sell_niftyVWAP(p, 'nifty18janfut', 45)
+    order_buy_and_sell_niftyVWAP(p, 'nifty18febfut', 15)
 
 
 # start_from_here()
